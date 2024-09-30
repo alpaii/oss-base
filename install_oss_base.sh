@@ -1,53 +1,51 @@
 #!/bin/bash
 
-# 시스템 업데이트
+# System update
 dnf update -y
 
-# Docker 설치
+# Install Docker
 dnf install -y docker
 
-# Docker 서비스 시작 및 부팅 시 자동 시작 설정
+# Start Docker service and enable it to start automatically on boot
 systemctl start docker
 systemctl enable docker
 
-# ec2-user를 Docker 그룹에 추가하여 sudo 없이 Docker 명령을 실행할 수 있도록 설정
+# Add ec2-user to the Docker group to allow Docker commands to be run without sudo
 usermod -aG docker ec2-user
 
-# 최신 Docker Compose 바이너리를 다운로드하여 /usr/local/bin에 설치합니다.
+# Download the latest Docker Compose binary and install it to /usr/local/bin
 curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
-# Docker Compose가 실행 가능하도록 권한을 부여합니다.
+# Grant execute permission for Docker Compose
 chmod +x /usr/local/bin/docker-compose
 
-# AWS 리전 설정 (서울 리전: ap-northeast-2)
+# Set AWS region (Seoul region: ap-northeast-2)
 REGION="ap-northeast-2"
 
-# CodeDeploy Agent 설치 파일 다운로드
+# Download CodeDeploy Agent installation files
 dnf install -y ruby wget
 
-# CodeDeploy Agent 설치 스크립트 다운로드
+# Download the CodeDeploy Agent installation script
 cd /home/ec2-user
 wget https://aws-codedeploy-${REGION}.s3.${REGION}.amazonaws.com/latest/install
 
-# 설치 스크립트에 실행 권한 부여
+# Grant execute permission to the installation script
 chmod +x ./install
 
-# CodeDeploy Agent 설치
+# Install CodeDeploy Agent
 ./install auto
 
-# CodeDeploy Agent 시작
+# Start CodeDeploy Agent
 systemctl start codedeploy-agent
 
-# CodeDeploy Agent 서비스 상태 확인
+# Check the status of the CodeDeploy Agent service
 systemctl status codedeploy-agent
 
-# CodeDeploy Agent 자동 시작 설정
+# Enable CodeDeploy Agent to start automatically on boot
 systemctl enable codedeploy-agent
 
-# Timezone 설정
+# Set timezone
 timedatectl set-timezone Asia/Seoul
 
-# jq 설치 (AWS Secrets Manager에서 JSON 데이터 처리에 필요)
+# Install jq (required for processing JSON data from AWS Secrets Manager)
 dnf install -y jq
-
-
